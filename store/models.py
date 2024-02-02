@@ -1,10 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import RegexValidator
 
-
+User = get_user_model()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     address = models.CharField(max_length=100, null=True, blank=True)
@@ -48,6 +48,8 @@ class Product(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
 
+    wishlist = models.ManyToManyField(User)
+
     def __str__(self):
         return self.name
 
@@ -67,3 +69,6 @@ class Cart(models.Model):
     quantity = models.IntegerField(default=1)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
+# class Wishlist(models.Model):
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
