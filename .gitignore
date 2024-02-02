@@ -1,0 +1,8 @@
+.idea
+venv
+*.db
+*.sqlite3
+.env
+
+
+#89011500995
