@@ -171,3 +171,8 @@ class ProductSingleView(View):
                                'rating': 5.0,
                                'url': data.image.url,
                                })
+
+class WishlistView(View):
+
+    def get(self, request):
+        return render(request, "store/wishlist.html")
