@@ -1,13 +1,17 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
+from django.db.models import F, ExpressionWrapper, DecimalField, Case, When
+from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-from django.views import View
-from django.db.models import OuterRef, Subquery, F, ExpressionWrapper, DecimalField, Case, When
 from django.utils import timezone
-from .models import Product, Discount, Cart
+from django.views import View
 from rest_framework import viewsets, response
 from rest_framework.permissions import IsAuthenticated
+
+from .models import Product, Cart
 from .serializers import CartSerializer, ProductSerializer
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import User
+
+User = get_user_model()
 
 
 class CartViewSet(viewsets.ModelViewSet):
@@ -40,7 +44,8 @@ class CartViewSet(viewsets.ModelViewSet):
             else:  # Иначе создаём объект по умолчанию (quantity по умолчанию = 1, так прописали в моделях)
                 cart_item = Cart(user=request.user, product=product)
         cart_item.save()  # Сохранили объект в БД
-        return response.Response({'message': 'Product added to cart'}, status=201)  # Вернули ответ, что всё прошло успешно
+        return response.Response({'message': 'Product added to cart'},
+                                 status=201)  # Вернули ответ, что всё прошло успешно
 
     def update(self, request, *args, **kwargs):
         # Для удобства в kwargs передаётся id строки для изменения в БД, под параметром pk
@@ -59,13 +64,36 @@ class CartViewSet(viewsets.ModelViewSet):
         cart_item.delete()
         return response.Response({'message': 'Product delete from cart'}, status=201)
 
+
 class WishlistViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        return user.get_wishlist.all()
+        # Если пользователь аутентифицирован, возвращаем избранные товары, иначе возвращаем пустой QuerySet
+        return self.request.user.get_wishlist.all() if isinstance(self.request.user, User) else Product.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        # Проверяем, является ли пользователь аутентифицированным
+        if isinstance(request.user, AnonymousUser):
+            return response.Response({'message': 'Требуется аутентификация'}, status=401)
+
+        product_id = request.data.get('product')
+
+        if not product_id:
+            return response.Response({'message': 'Отсутствует параметр "product"'}, status=400)
+
+        wishlist_items = self.get_queryset().filter(id=product_id)
+
+        if wishlist_items.exists():
+            message = 'Товар уже был добавлен в избранное ранее'
+        else:
+            product = get_object_or_404(Product, id=product_id)
+            user = self.request.user
+            user.get_wishlist.add(product)
+            message = 'Товар успешно добавлен в избранное'
+
+        return response.Response({'message': message})
 
 
 class ShopView(View):
@@ -105,10 +133,12 @@ class CartView(View):
     def get(self, request):
         return render(request, "store/cart.html")
 
+
 class WishlistView(View):
 
     def get(self, request):
         return render(request, "store/wishlist.html")
+
 
 class ProductSingleView(View):
 
@@ -183,4 +213,3 @@ class ProductSingleView(View):
                                'rating': 5.0,
                                'url': data.image.url,
                                })
-
