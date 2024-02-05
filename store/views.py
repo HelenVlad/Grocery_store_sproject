@@ -86,14 +86,21 @@ class WishlistViewSet(viewsets.ModelViewSet):
         wishlist_items = self.get_queryset().filter(id=product_id)
 
         if wishlist_items.exists():
-            message = 'Товар уже был добавлен в избранное ранее'
+            message = 'Продукт уже был добавлен в избранное ранее'
         else:
             product = get_object_or_404(Product, id=product_id)
             user = self.request.user
             user.get_wishlist.add(product)
-            message = 'Товар успешно добавлен в избранное'
+            message = 'Продукт успешно добавлен в избранное'
 
         return response.Response({'message': message})
+
+    def destroy(self, request, *args, **kwargs):
+        wishlist_items = self.get_queryset().get(id=kwargs['pk'])
+        wishlist_items.delete()
+        return response.Response({'message': 'Продукт удален из избранного'}, status=201)
+
+
 
 
 class ShopView(View):
