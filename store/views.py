@@ -5,7 +5,7 @@ from django.utils import timezone
 from .models import Product, Discount, Cart
 from rest_framework import viewsets, response
 from rest_framework.permissions import IsAuthenticated
-from .serializers import CartSerializer
+from .serializers import CartSerializer, ProductSerializer
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
@@ -59,6 +59,14 @@ class CartViewSet(viewsets.ModelViewSet):
         cart_item.delete()
         return response.Response({'message': 'Product delete from cart'}, status=201)
 
+class WishlistViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.get_wishlist.all()
+
 
 class ShopView(View):
 
@@ -97,6 +105,10 @@ class CartView(View):
     def get(self, request):
         return render(request, "store/cart.html")
 
+class WishlistView(View):
+
+    def get(self, request):
+        return render(request, "store/wishlist.html")
 
 class ProductSingleView(View):
 
@@ -172,7 +184,3 @@ class ProductSingleView(View):
                                'url': data.image.url,
                                })
 
-class WishlistView(View):
-
-    def get(self, request):
-        return render(request, "store/wishlist.html")

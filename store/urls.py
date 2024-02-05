@@ -1,9 +1,12 @@
 from django.urls import path
-from .views import ShopView, CartView, ProductSingleView, CartViewSet, WishlistView
+from .views import ShopView, CartView, ProductSingleView, CartViewSet, WishlistView, WishlistViewSet
 from rest_framework import routers
 
-router = routers.DefaultRouter()
-router.register(r'cart', CartViewSet)
+cart_router = routers.DefaultRouter()
+cart_router.register(r'cart', CartViewSet, basename='cart')
+
+wishlist_router = routers.DefaultRouter()
+wishlist_router.register(r'wishlist', WishlistViewSet, basename='wishlist')
 
 app_name = 'store'
 

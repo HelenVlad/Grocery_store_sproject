@@ -48,7 +48,9 @@ class Product(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
 
-    wishlist = models.ManyToManyField(User)
+    wishlist = models.ManyToManyField(User, related_name="get_wishlist")
+
+
 
     def __str__(self):
         return self.name
@@ -68,7 +70,3 @@ class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-
-# class Wishlist(models.Model):
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
