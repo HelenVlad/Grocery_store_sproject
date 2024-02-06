@@ -65,6 +65,12 @@ class CartViewSet(viewsets.ModelViewSet):
         return response.Response({'message': 'Product delete from cart'}, status=201)
 
 
+class CartView(View):
+
+    def get(self, request):
+        return render(request, "store/cart.html")
+
+
 class WishlistViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, ]
     serializer_class = ProductSerializer
@@ -101,6 +107,12 @@ class WishlistViewSet(viewsets.ModelViewSet):
         return response.Response({'message': 'Продукт удален из избранного'}, status=201)
 
 
+class WishlistView(View):
+
+    def get(self, request):
+        wishlist_items = request.user.get_wishlist.all().values('id', 'name', "description", 'price', 'image')
+
+        return render(request, "store/wishlist.html", context={'data': wishlist_items})
 
 
 class ShopView(View):
@@ -132,19 +144,8 @@ class ShopView(View):
             price_after=price_with_discount
         ).values('id', 'name', 'image', 'price_before', 'price_after',
                  'discount_value')
+        print(products)
         return render(request, 'store/shop.html', {"data": products})
-
-
-class CartView(View):
-
-    def get(self, request):
-        return render(request, "store/cart.html")
-
-
-class WishlistView(View):
-
-    def get(self, request):
-        return render(request, "store/wishlist.html")
 
 
 class ProductSingleView(View):
