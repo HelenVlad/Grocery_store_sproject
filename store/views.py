@@ -26,6 +26,7 @@ class CartViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         print(request.data)
         print(request.data.get('product_id'))
+        print(self.get_queryset().filter(product__id=request.data.get('product_id')))
         ## Можно записать так, для получения товара (проверка что он уже есть в корзине)
         # cart_items = Cart.objects.filter(user=request.user,
         #                                  product__id=request.data.get('product'))
@@ -40,7 +41,7 @@ class CartViewSet(viewsets.ModelViewSet):
             else:  # Иначе просто добавляем значение по умолчению 1
                 cart_item.quantity += 1
         else:  # Если продукта ещё нет в корзине
-            product = get_object_or_404(Product, id=request.data.get('product'))  # Получаем продукт и
+            product = get_object_or_404(Product, id=request.data.get('product_id'))  # Получаем продукт и
             # проверяем что он вообще существует, если его нет то выйдет ошибка 404
             if request.data.get('quantity'):  # Если передаём точное количество продукта, то передаём его
                 cart_item = Cart(user=request.user, product=product, quantity=request.data.get('quantity'))
