@@ -5,7 +5,7 @@ from store.views import WishlistViewSet
 User = get_user_model()
 
 user = User.objects.get(username='admin_el')
-request = APIRequestFactory().post('http://127.0.0.1:8000/wishlist/', {})
+request = APIRequestFactory().post('http://127.0.0.1:8000/wishlist/', {'product': 41})
 request.user = user
 
 view = WishlistViewSet.as_view({'post': 'create'})

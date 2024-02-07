@@ -24,30 +24,41 @@
                             <th>Product List</th>
                             <th>&nbsp;</th>
                             <th>Price</th>
+
+                            <th>Add to cart</th>
+
                         </tr>
                         </thead>
                         <tbody>
-                        {% for product in data %}<!-- Начало цикла-->
+                        {% for product in data %}
                         <tr class="text-center">
-                            <!-- Опционально! Реализовать, что при нажатии на крестик удаляется товар из Wishlist,
-                            соответственно пишите ссылку на обработчик. Обработчик принимает параметр id товара
-                            который он должен удалить из БД, удаляет его и возвращает перенаправление (redirect)
-                            на обработчик wishlist, который показывает страницу wishlist-->
-                            <td class="product-remove"><a href="#"><span class="ion-ios-close"></span></a></td>
-                            <!-- При нажатии на картинку (подставить из БД) должен быть переход на соответствующий товар ссылку прописать в href-->
+                            <!-- Кнопка для удаления товара из избранного -->
+                            <td class="product-remove">
+                                <!-- Обработчик удаления товара из избранного -->
+                                <form action="{% url 'store:wishlist_destroy' product.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit"><span class="ion-ios-close"></span></button>
+                                </form>
+                            </td>
+                            <!-- Остальные столбцы таблицы -->
                             <td class="image-prod"><a href="{% url 'store:product' product.id %}">
-                                <div class="img" style="background-image:url(/{{ product.image }});"></div>
+                                <div class="img" style="background-image:url('{% static product.image %}');"></div>
                             </a></td>
-
                             <td class="product-name">
                                 <h3>{{product.name}}</h3><!-- Название из БД-->
                                 <p>{{product.description}}</p><!-- Описание из БД-->
                             </td>
-
                             <td class="price">${{product.price}}</td><!-- Стоимость из БД-->
-
+                            <td class="product-remove">
+                                <!-- Обработчик добавления товара в корзину из избранного -->
+                                <form method="post" action="{% url 'store:add_to_cart' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit"><span class="ion-ios-cart"></span></button>
+                                </form>
+                            </td>
                         </tr>
-                        {% endfor %}<!-- Конец цикла-->
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>

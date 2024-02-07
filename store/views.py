@@ -1,12 +1,13 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import F, ExpressionWrapper, DecimalField, Case, When
-from django.shortcuts import get_object_or_404
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views import View
 from rest_framework import viewsets, response
 from rest_framework.permissions import IsAuthenticated
+from django.http import HttpResponseNotAllowed, HttpResponseServerError, Http404
 
 from .models import Product, Cart
 from .serializers import CartSerializer, ProductSerializer
@@ -23,11 +24,13 @@ class CartViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        print(request.data)
+        print(request.data.get('product_id'))
         ## Можно записать так, для получения товара (проверка что он уже есть в корзине)
         # cart_items = Cart.objects.filter(user=request.user,
         #                                  product__id=request.data.get('product'))
         # Или можно так, так как мы переопределили метод get_queryset
-        cart_items = self.get_queryset().filter(product__id=request.data.get('product'))
+        cart_items = self.get_queryset().filter(product__id=request.data.get('product_id'))
         # request API передаёт параметры по названиям полей в БД, поэтому ловим product
         if cart_items:  # Если продукт уже есть в корзине
             cart_item = cart_items[0]
@@ -44,8 +47,10 @@ class CartViewSet(viewsets.ModelViewSet):
             else:  # Иначе создаём объект по умолчанию (quantity по умолчанию = 1, так прописали в моделях)
                 cart_item = Cart(user=request.user, product=product)
         cart_item.save()  # Сохранили объект в БД
-        return response.Response({'message': 'Product added to cart'},
-                                 status=201)  # Вернули ответ, что всё прошло успешно
+        messages.success(request, 'Product added to cart, status=201')
+        return redirect('store:wishlist')
+        # return response.Response({'message': 'Product added to cart'},
+        #                          status=201)  # Вернули ответ, что всё прошло успешно
 
     def update(self, request, *args, **kwargs):
         # Для удобства в kwargs передаётся id строки для изменения в БД, под параметром pk
@@ -101,11 +106,21 @@ class WishlistViewSet(viewsets.ModelViewSet):
 
         return response.Response({'message': message})
 
-    def destroy(self, request, *args, **kwargs):
-        wishlist_items = self.get_queryset().get(id=kwargs['pk'])
-        wishlist_items.delete()
-        return response.Response({'message': 'Продукт удален из избранного'}, status=201)
 
+    def destroy(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            try:
+                wishlist_item = self.get_queryset().get(id=kwargs['pk'])
+            except User.DoesNotExist:
+                raise Http404("Объект не найден")
+
+            user = self.request.user
+            user.get_wishlist.remove(wishlist_item)
+
+            messages.success(request, 'Позиция успешно удалена.')
+            return redirect('store:wishlist')
+        else:
+            return HttpResponseNotAllowed(['POST'], 'Only POST method is allowed for this endpoint.')
 
 class WishlistView(View):
 
@@ -144,7 +159,6 @@ class ShopView(View):
             price_after=price_with_discount
         ).values('id', 'name', 'image', 'price_before', 'price_after',
                  'discount_value')
-        print(products)
         return render(request, 'store/shop.html', {"data": products})
 
 
