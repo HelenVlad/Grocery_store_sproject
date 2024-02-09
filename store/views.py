@@ -7,7 +7,8 @@ from django.utils import timezone
 from django.views import View
 from rest_framework import viewsets, response
 from rest_framework.permissions import IsAuthenticated
-from django.http import HttpResponseNotAllowed, HttpResponseServerError, Http404
+from django.http import HttpResponseNotAllowed, HttpResponseRedirect, Http404
+from django.urls import reverse
 
 from .models import Product, Cart
 from .serializers import CartSerializer, ProductSerializer
@@ -49,9 +50,16 @@ class CartViewSet(viewsets.ModelViewSet):
                 cart_item = Cart(user=request.user, product=product)
         cart_item.save()  # Сохранили объект в БД
         messages.success(request, 'Product added to cart, status=201')
-        return redirect('store:wishlist')
-        # return response.Response({'message': 'Product added to cart'},
-        #                          status=201)  # Вернули ответ, что всё прошло успешно
+        # Определение URL для редиректа в зависимости от страницы, с которой был отправлен запрос
+        redirect_url = reverse('store:shop')  # По умолчанию перенаправляем на страницу магазина
+
+        # Проверяем, был ли передан заголовок Referer и если да, определяем URL для редиректа
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            if 'wishlist' in referer:  # Если запрос был отправлен со страницы wishlist
+                redirect_url = reverse('store:wishlist')
+
+        return HttpResponseRedirect(redirect_url)
 
     def update(self, request, *args, **kwargs):
         # Для удобства в kwargs передаётся id строки для изменения в БД, под параметром pk
@@ -86,6 +94,7 @@ class WishlistViewSet(viewsets.ModelViewSet):
         return self.request.user.get_wishlist.all() if isinstance(self.request.user, User) else Product.objects.none()
 
     def create(self, request, *args, **kwargs):
+        print('request.data=', request.data)
         # Проверяем, является ли пользователь аутентифицированным
         if isinstance(request.user, AnonymousUser):
             return response.Response({'message': 'Требуется аутентификация'}, status=401)
@@ -105,7 +114,17 @@ class WishlistViewSet(viewsets.ModelViewSet):
             user.get_wishlist.add(product)
             message = 'Продукт успешно добавлен в избранное'
 
-        return response.Response({'message': message})
+            # Определение URL для редиректа в зависимости от страницы, с которой был отправлен запрос
+        redirect_url = reverse('store:shop')  # По умолчанию перенаправляем на страницу магазина
+
+        # Проверяем, был ли передан заголовок Referer и если да, определяем URL для редиректа
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            if 'wishlist' in referer:  # Если запрос был отправлен со страницы wishlist
+                redirect_url = reverse('store:wishlist')
+                # Или можно просто добавить '/wishlist/' к redirect_url
+
+        return HttpResponseRedirect(redirect_url)
 
 
     def destroy(self, request, *args, **kwargs):

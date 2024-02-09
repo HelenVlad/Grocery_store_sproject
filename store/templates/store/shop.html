@@ -51,11 +51,25 @@
 	    							<a href="#" class="add-to-cart d-flex justify-content-center align-items-center text-center">
 	    								<span><i class="ion-ios-menu"></i></span>
 	    							</a>
-	    							<a href="#" class="buy-now d-flex justify-content-center align-items-center mx-1">
-	    								<span><i class="ion-ios-cart"></i></span>
+                                    <form action="{% url 'store:add_to_cart' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                                        <button type="submit" style="border: none; background-color: #82ae46; border-radius: 50%; width: 40px; height: 40px; padding: 0;">
+                                            <span style="color: white; font-size: 15px; line-height: 40px;">
+                                                <i class="ion-ios-cart"></i>
+                                            </span>
+                                        </button>
+                                    </form>
 	    							</a>
-	    							<a href="#" class="heart d-flex justify-content-center align-items-center ">
-	    								<span><i class="ion-ios-heart"></i></span>
+                                    <form action="{% url 'store:wishlist_create' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product" value="{{ product.id }}">
+                                        <button type="submit" style="border: none; background-color: #82ae46; border-radius: 50%; width: 40px; height: 40px; padding: 0;">
+                                            <span style="color: white; font-size: 15px; line-height: 40px;">
+                                                <i class="ion-ios-heart"></i>
+                                            </span>
+                                        </button>
+                                    </form>
 	    							</a>
     							</div>
     						</div>

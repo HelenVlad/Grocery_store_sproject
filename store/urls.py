@@ -16,5 +16,6 @@ urlpatterns = [
     path('product/<int:id>/', ProductSingleView.as_view(), name='product'),
     path('wishlist/', WishlistView.as_view(), name='wishlist'),
     path('wishlist/<int:pk>/destroy/', WishlistViewSet.as_view({'post': 'destroy'}), name='wishlist_destroy'),
+    path('wishlist/create/', WishlistViewSet.as_view({'post': 'create'}), name='wishlist_create'),
     path('wishlist/add_to_cart/', CartViewSet.as_view({'post': 'create'}), name='add_to_cart'),
 ]
