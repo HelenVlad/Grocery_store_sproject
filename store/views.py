@@ -25,9 +25,6 @@ class CartViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        print(request.data)
-        print(request.data.get('product_id'))
-        print(self.get_queryset().filter(product__id=request.data.get('product_id')))
         ## Можно записать так, для получения товара (проверка что он уже есть в корзине)
         # cart_items = Cart.objects.filter(user=request.user,
         #                                  product__id=request.data.get('product'))
@@ -94,7 +91,6 @@ class WishlistViewSet(viewsets.ModelViewSet):
         return self.request.user.get_wishlist.all() if isinstance(self.request.user, User) else Product.objects.none()
 
     def create(self, request, *args, **kwargs):
-        print('request.data=', request.data)
         # Проверяем, является ли пользователь аутентифицированным
         if isinstance(request.user, AnonymousUser):
             return response.Response({'message': 'Требуется аутентификация'}, status=401)
